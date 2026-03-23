@@ -32,12 +32,12 @@ anomalyiq-tcn/
 ├── data/
 │   ├── raw/
 │   └── processed/
-│       ├── train.npy
-│       ├── test.npy
-│       ├── test_raw.npy
-│       └── scaler.pkl
+│       ├── train.npy           ← download from HuggingFace
+│       ├── test.npy            ← download from HuggingFace
+│       ├── test_raw.npy        ← download from HuggingFace
+│       └── scaler.pkl          ← download from HuggingFace
 ├── models/
-│   └── tcn_autoencoder.pth
+│   └── tcn_autoencoder.pth     ← download from HuggingFace
 ├── results/
 │   ├── anomaly_scores.csv
 │   ├── anomalies_percentile.csv
@@ -49,16 +49,95 @@ anomalyiq-tcn/
 
 ---
 
+## 📥 Download Pre-trained Model and Data
+
+Large files are hosted on Hugging Face (too large for GitHub):
+
+👉 https://huggingface.co/datasets/vikram006/anomalyiq-tcn-data/tree/main
+
+### Option 1 — Auto Download Script (Recommended)
+```bash
+# Install huggingface_hub
+pip install huggingface_hub
+
+# Run this to download all files into correct folders
+python -c "
+from huggingface_hub import hf_hub_download
+import os
+
+os.makedirs('data/processed', exist_ok=True)
+os.makedirs('models', exist_ok=True)
+
+files = [
+    ('data/processed/train.npy',    'data/processed/train.npy'),
+    ('data/processed/test.npy',     'data/processed/test.npy'),
+    ('data/processed/test_raw.npy', 'data/processed/test_raw.npy'),
+    ('data/processed/scaler.pkl',   'data/processed/scaler.pkl'),
+    ('models/tcn_autoencoder.pth',  'models/tcn_autoencoder.pth'),
+]
+
+for repo_path, local_path in files:
+    print(f'Downloading {local_path}...')
+    hf_hub_download(
+        repo_id='vikram006/anomalyiq-tcn-data',
+        filename=repo_path,
+        repo_type='dataset',
+        local_dir='.'
+    )
+    print(f'Saved to {local_path} ✅')
+
+print('All files downloaded and placed correctly ✅')
+"
+```
+
+### Option 2 — Download All at Once
+```bash
+pip install huggingface_hub
+
+python -c "
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id='vikram006/anomalyiq-tcn-data',
+    repo_type='dataset',
+    local_dir='.'
+)
+print('All files downloaded ✅')
+"
+```
+
+### After Download — Verify Files Exist
+```bash
+# Check all required files are in place
+ls data/processed/
+# Expected: train.npy  test.npy  test_raw.npy  scaler.pkl
+
+ls models/
+# Expected: tcn_autoencoder.pth
+```
+
+---
+
 ## 🚀 Quick Start — Docker (Recommended)
 ```bash
 # 1. Clone the repo
 git clone https://github.com/vikram0678/anomalyiq-tcn.git
 cd anomalyiq-tcn
 
-# 2. Start the app
+# 2. Download large files from HuggingFace
+pip install huggingface_hub
+python -c "
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id='vikram006/anomalyiq-tcn-data',
+    repo_type='dataset',
+    local_dir='.'
+)
+"
+
+# 3. Start the app
 docker-compose up --build
 
-# 3. Open dashboard
+# 4. Open dashboard
 # http://localhost:8501
 ```
 
@@ -69,16 +148,27 @@ docker-compose up --build
 # Install dependencies
 pip install -r requirements.txt
 
-# Step 1 — Preprocess data
+# Step 1 — Download large files
+pip install huggingface_hub
+python -c "
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id='vikram006/anomalyiq-tcn-data',
+    repo_type='dataset',
+    local_dir='.'
+)
+"
+
+# Step 2 — Preprocess data (or skip if downloaded above)
 python scripts/preprocess_data.py
 
-# Step 2 — Train model
+# Step 3 — Train model (or skip if downloaded above)
 python scripts/train.py
 
-# Step 3 — Evaluate
+# Step 4 — Evaluate
 python scripts/evaluate.py
 
-# Step 4 — Run dashboard
+# Step 5 — Run dashboard
 streamlit run app/main.py
 ```
 
@@ -135,16 +225,16 @@ See full comparison → [`docs/TCN_vs_LSTM.md`](docs/TCN_vs_LSTM.md)
 
 ## 📈 Results
 
-| Metric                | Value      |
-|-----------------------|------------|
+| Metric                | Value         |
+|-----------------------|---------------|
 | Dataset               | NASA SMAP/MSL |
-| Training windows      | 19,080     |
-| Test windows          | 75,370     |
-| Model parameters      | 918,041    |
-| Training time         | 351.4s     |
-| Final training loss   | 0.000013   |
-| Percentile anomalies  | 754        |
-| POT anomalies         | 750        |
+| Training windows      | 19,080        |
+| Test windows          | 75,370        |
+| Model parameters      | 918,041       |
+| Training time         | 351.4s        |
+| Final training loss   | 0.000013      |
+| Percentile anomalies  | 754           |
+| POT anomalies         | 750           |
 
 ---
 
@@ -176,15 +266,27 @@ POT_INITIAL_QUANTILE=0.95
 
 ## 🛠️ Tech Stack
 
-| Tool         | Purpose                  |
-|--------------|--------------------------|
-| PyTorch      | TCN Autoencoder model    |
-| Streamlit    | Interactive dashboard    |
-| Plotly       | Interactive charts       |
-| Scikit-learn | Data normalization       |
-| SciPy        | POT thresholding         |
-| Docker       | Containerization         |
-| NumPy/Pandas | Data processing          |
+| Tool         | Purpose               |
+|--------------|-----------------------|
+| PyTorch      | TCN Autoencoder model |
+| Streamlit    | Interactive dashboard |
+| Plotly       | Interactive charts    |
+| Scikit-learn | Data normalization    |
+| SciPy        | POT thresholding      |
+| Docker       | Containerization      |
+| NumPy/Pandas | Data processing       |
 
 ---
 
+## 📚 References
+
+- [TCN Original Paper](https://arxiv.org/abs/1803.01271)
+- [NASA Telemanom Paper](https://arxiv.org/abs/1802.04431)
+- [Streamlit Docs](https://docs.streamlit.io)
+- [POT — Extreme Value Theory](https://en.wikipedia.org/wiki/Generalized_Pareto_distribution)
+
+---
+
+## 👤 Author
+
+**Vikram** — [@vikram0678](https://github.com/vikram0678)

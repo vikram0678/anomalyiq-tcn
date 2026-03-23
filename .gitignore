@@ -1,0 +1,11 @@
+data/processed/train.npy
+data/processed/test.npy
+data/processed/test_raw.npy
+data/processed/scaler.pkl
+models/tcn_autoencoder.pth
+data/raw/*.npy
+data/raw/*.pkl
+__pycache__/
+*.pyc
+.env
+upload.py
